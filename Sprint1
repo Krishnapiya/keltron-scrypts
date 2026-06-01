@@ -1,1 +1,232 @@
+CREATE SCHEMA IF NOT EXISTS awb;
+
+CREATE TABLE IF NOT EXISTS awb.application_status_master (
+  id              BIGSERIAL PRIMARY KEY,
+  status_code     VARCHAR(40)  NOT NULL UNIQUE,
+  status_name     VARCHAR(100) NOT NULL UNIQUE,
+  display_order   INT          NOT NULL DEFAULT 0,
+  active          BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS awb.payment_status_master (
+  id              BIGSERIAL PRIMARY KEY,
+  status_code     VARCHAR(20)  NOT NULL UNIQUE,
+  status_name     VARCHAR(60)  NOT NULL UNIQUE,
+  display_order   INT          NOT NULL DEFAULT 0,
+  active          BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO awb.application_status_master (status_code, status_name, display_order)
+VALUES
+  ('DRAFT',            'Draft',              0),
+  ('PAYMENT_PENDING',  'Payment Pending',    5),
+  ('SUBMITTED',        'Submitted',         10),
+  ('FORWARDED_TO_CVO', 'Forwarded to CVO',  15)
+ON CONFLICT (status_code) DO NOTHING;
+
+INSERT INTO awb.payment_status_master (status_code, status_name, display_order)
+VALUES
+  ('PENDING',  'Pending',  10),
+  ('SUCCESS',  'Success',  20),
+  ('FAILED',   'Failed',   30),
+  ('REFUNDED', 'Refunded', 40)
+ON CONFLICT (status_code) DO NOTHING;
+CREATE TABLE IF NOT EXISTS awb.district (
+  id              BIGSERIAL PRIMARY KEY,
+  code            VARCHAR(20)  NOT NULL UNIQUE,
+  name            VARCHAR(200) NOT NULL,
+  active          BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_by      VARCHAR(100),
+  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by VARCHAR(100),
+  last_modified_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uq_awb_district_name UNIQUE (name)
+);
+CREATE INDEX IF NOT EXISTS idx_awb_district_name ON awb.district (lower(name));
+
+-- Link organisational offices to geographic district (CVO / DISTRICT offices).
+-- HEAD_OFFICE rows keep district_id NULL.
+ALTER TABLE master.office
+  ADD COLUMN IF NOT EXISTS district_id BIGINT NULL REFERENCES awb.district(id);
+
+CREATE INDEX IF NOT EXISTS idx_office_district ON master.office (district_id);
+
+CREATE TABLE IF NOT EXISTS awb.fee_schedule (
+  id              BIGSERIAL PRIMARY KEY,
+  entity_type     VARCHAR(30)  NOT NULL,
+  fee_kind        VARCHAR(30)  NOT NULL,
+  amount          NUMERIC(12,2) NOT NULL,
+  currency        VARCHAR(3)   NOT NULL DEFAULT 'INR',
+  effective_from  DATE         NOT NULL DEFAULT CURRENT_DATE,
+  effective_to    DATE         NULL,
+  active          BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_by      VARCHAR(100),
+  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by VARCHAR(100),
+  last_modified_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uq_awb_fee_schedule UNIQUE (entity_type, fee_kind, effective_from),
+  CONSTRAINT chk_awb_fee_entity_type CHECK (entity_type IN ('PET_SHOP', 'DOG_BREEDER')),
+  CONSTRAINT chk_awb_fee_kind CHECK (fee_kind IN ('REGISTRATION', 'RENEWAL'))
+);
+
+CREATE TABLE IF NOT EXISTS awb.document_type (
+  id              BIGSERIAL PRIMARY KEY,
+  code            VARCHAR(60)  NOT NULL UNIQUE,
+  name            VARCHAR(200) NOT NULL,
+  entity_scope    VARCHAR(30)  NOT NULL,
+  mandatory       BOOLEAN      NOT NULL DEFAULT FALSE,
+  active          BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_by      VARCHAR(100),
+  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by VARCHAR(100),
+  last_modified_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO awb.fee_schedule (entity_type, fee_kind, amount)
+VALUES ('PET_SHOP', 'REGISTRATION', 5000.00)
+ON CONFLICT (entity_type, fee_kind, effective_from) DO NOTHING;
+
+INSERT INTO awb.document_type (code, name, entity_scope, mandatory)
+VALUES
+  ('ID_PROOF',       'Identification Document', 'PET_SHOP', true),
+  ('ADDRESS_PROOF',  'Address Proof',           'PET_SHOP', true),
+  ('FACILITY_PHOTO', 'Facility Photograph',     'PET_SHOP', false),
+  ('SHOP_LICENSE',   'Supporting Document',     'PET_SHOP', false)
+ON CONFLICT (code) DO NOTHING;
+
+-- -----------------------------------------------------------------------------
+-- 3. Registration application (pet shop — header / workflow)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS awb.registration_application (
+  id                      BIGSERIAL PRIMARY KEY,
+  application_number      VARCHAR(50)  NULL UNIQUE,
+  entity_type             VARCHAR(30)  NOT NULL DEFAULT 'PET_SHOP',
+  application_kind        VARCHAR(20)  NOT NULL DEFAULT 'NEW',
+  status_id               BIGINT       NOT NULL REFERENCES awb.application_status_master(id),
+  applicant_user_id       BIGINT       NOT NULL REFERENCES master.users(id),
+  district_id             BIGINT       NULL REFERENCES awb.district(id),
+  assigned_office_id      BIGINT       NULL REFERENCES master.office(id),
+  cv_office_id            BIGINT       NULL REFERENCES master.office(id),
+  payment_id              BIGINT       NULL,
+  submitted_at            TIMESTAMP    NULL,
+  forwarded_to_cvo_at     TIMESTAMP    NULL,
+  forwarded_to_cvo_by     BIGINT       NULL REFERENCES master.users(id),
+  created_by              VARCHAR(100),
+  created_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by        VARCHAR(100),
+  last_modified_at        TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_awb_311_entity_type CHECK (entity_type = 'PET_SHOP'),
+  CONSTRAINT chk_awb_311_app_kind CHECK (application_kind = 'NEW')
+);
+CREATE INDEX IF NOT EXISTS idx_awb_311_reg_applicant ON awb.registration_application(applicant_user_id);
+CREATE INDEX IF NOT EXISTS idx_awb_311_reg_status ON awb.registration_application(status_id);
+CREATE INDEX IF NOT EXISTS idx_awb_311_reg_ho_inbox ON awb.registration_application(status_id, assigned_office_id)
+  WHERE application_number IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_awb_311_reg_cvo_inbox ON awb.registration_application(cv_office_id, status_id);
+
+-- -----------------------------------------------------------------------------
+-- 4. Pet shop registration form (URS §3.1.1 fields)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS awb.pet_shop_detail (
+  id                    BIGSERIAL PRIMARY KEY,
+  application_id        BIGINT       NOT NULL UNIQUE REFERENCES awb.registration_application(id) ON DELETE CASCADE,
+  shop_name             VARCHAR(255) NOT NULL,
+  owner_name            VARCHAR(255) NOT NULL,
+  address_line1         VARCHAR(500) NOT NULL,
+  address_line2         VARCHAR(500) NULL,
+  city                  VARCHAR(120) NULL,
+  pincode               VARCHAR(10)  NULL,
+  contact_mobile        VARCHAR(20)  NOT NULL,
+  contact_email         VARCHAR(255) NOT NULL,
+  latitude              NUMERIC(10,7) NULL,
+  longitude             NUMERIC(10,7) NULL,
+  registration_details  TEXT         NULL,
+  created_by            VARCHAR(100),
+  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by      VARCHAR(100),
+  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+-- -----------------------------------------------------------------------------
+-- 5. Identification & supporting documents
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS awb.application_document (
+  id                    BIGSERIAL PRIMARY KEY,
+  application_id        BIGINT       NOT NULL REFERENCES awb.registration_application(id) ON DELETE CASCADE,
+  document_type_id      BIGINT       NULL REFERENCES awb.document_type(id),
+  file_name             VARCHAR(500) NOT NULL,
+  file_path             VARCHAR(1000) NOT NULL,
+  mime_type             VARCHAR(120) NULL,
+  file_size_bytes       BIGINT       NULL,
+  uploaded_by           BIGINT       NULL REFERENCES master.users(id),
+  uploaded_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_by            VARCHAR(100),
+  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by      VARCHAR(100),
+  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_awb_311_doc_application ON awb.application_document(application_id);
+
+-- -----------------------------------------------------------------------------
+-- 6. Payment (registration fee — submit only after SUCCESS)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS awb.payment_transaction (
+  id                    BIGSERIAL PRIMARY KEY,
+  transaction_ref       VARCHAR(150) NOT NULL UNIQUE,
+  application_id        BIGINT       NOT NULL REFERENCES awb.registration_application(id),
+  payment_purpose       VARCHAR(30)  NOT NULL DEFAULT 'REGISTRATION',
+  amount                NUMERIC(12,2) NOT NULL,
+  currency              VARCHAR(3)   NOT NULL DEFAULT 'INR',
+  status_id             BIGINT       NOT NULL REFERENCES awb.payment_status_master(id),
+  gateway_name          VARCHAR(100) NULL,
+  gateway_order_id      VARCHAR(200) NULL,
+  gateway_payment_id    VARCHAR(200) NULL,
+  gateway_response      JSONB        NULL,
+  receipt_number        VARCHAR(100) NULL UNIQUE,
+  payment_date          TIMESTAMP    NULL,
+  payer_user_id         BIGINT       NULL REFERENCES master.users(id),
+  created_by            VARCHAR(100),
+  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by      VARCHAR(100),
+  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_awb_311_payment_purpose CHECK (payment_purpose = 'REGISTRATION')
+);
+CREATE INDEX IF NOT EXISTS idx_awb_311_payment_app ON awb.payment_transaction(application_id);
+CREATE INDEX IF NOT EXISTS idx_awb_311_payment_status ON awb.payment_transaction(status_id);
+
+ALTER TABLE awb.registration_application
+  DROP CONSTRAINT IF EXISTS fk_awb_311_reg_payment;
+ALTER TABLE awb.registration_application
+  ADD CONSTRAINT fk_awb_311_reg_payment
+  FOREIGN KEY (payment_id) REFERENCES awb.payment_transaction(id);
+
+-- -----------------------------------------------------------------------------
+-- 7. Workflow history (submit, forward to CVO)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS awb.application_workflow (
+  id                    BIGSERIAL PRIMARY KEY,
+  module_name           VARCHAR(50)  NOT NULL DEFAULT 'PET_SHOP',
+  application_id        BIGINT       NOT NULL REFERENCES awb.registration_application(id) ON DELETE CASCADE,
+  from_status_id        BIGINT       NULL REFERENCES awb.application_status_master(id),
+  to_status_id          BIGINT       NOT NULL REFERENCES awb.application_status_master(id),
+  action_by             BIGINT       NULL REFERENCES master.users(id),
+  remarks               TEXT         NULL,
+  action_date           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_by            VARCHAR(100),
+  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_awb_311_workflow_app ON awb.application_workflow(application_id);
+
+-- -----------------------------------------------------------------------------
+-- 8. Application number sequence
+-- -----------------------------------------------------------------------------
+
+CREATE SEQUENCE IF NOT EXISTS awb.seq_pet_shop_application START 1;
 
