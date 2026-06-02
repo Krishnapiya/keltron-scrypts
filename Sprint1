@@ -197,4 +197,28 @@ CREATE INDEX IF NOT EXISTS idx_awb_311_workflow_app ON awb.application_workflow(
 -- -----------------------------------------------------------------------------
 
 CREATE SEQUENCE IF NOT EXISTS awb.seq_pet_shop_application START 1;
+BEGIN;
+-- Ensure ADMIN role exists
+INSERT INTO master.role_master (role_name)
+VALUES ('ADMIN')
+ON CONFLICT (role_name) DO NOTHING;
+-- Insert admin user (password hash is BCrypt for 'admin123')
+INSERT INTO master.users (fname, lname, email, mobile_no, username, password, role_id)
+SELECT
+  'Admin',
+  'User',
+  'admin@localhost',
+  '0000000000',
+  'admin',
+  '$2b$10$zs3sFULdbKNpp.vAaPPN2ekpHpg9Q2QsBWjJS3TsmzuHs/5QdBAnm',
+  r.id
+FROM master.role_master r
+WHERE r.role_name = 'ADMIN'
+ON CONFLICT (username) DO NOTHING;
 
+INSERT INTO master.user_roles (user_id, role_id, office_id)
+SELECT u.id, r.id, NULL
+FROM master.users u
+JOIN master.role_master r ON r.role_name = 'ADMIN'
+WHERE u.username = 'admin'
+ON CONFLICT DO NOTHING;
