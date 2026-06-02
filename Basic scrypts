@@ -244,3 +244,11 @@ INSERT INTO master.menus(module_id, name, slug, path, display_order, active)
 SELECT m.id, 'Users', 'test-page', 'test-page', 10, true
 FROM master.modules m WHERE m.slug = 'master'
 ON CONFLICT (module_id, slug) DO NOTHING;
+
+CREATE TABLE master.audit
+(
+created_by CHARACTER VARYING NULL,
+created_at timestamp with time zone NOT NULL DEFAULT now(),
+last_modified_by CHARACTER VARYING NULL,
+last_modified_at timestamp with time zone NULL
+);
