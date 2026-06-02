@@ -5,17 +5,16 @@ CREATE TABLE IF NOT EXISTS awb.application_status_master (
   status_code     VARCHAR(40)  NOT NULL UNIQUE,
   status_name     VARCHAR(100) NOT NULL UNIQUE,
   display_order   INT          NOT NULL DEFAULT 0,
-  active          BOOLEAN      NOT NULL DEFAULT TRUE,
-);
+  active          BOOLEAN      NOT NULL DEFAULT TRUE
+)  INHERITS (master.audit);
 
 CREATE TABLE IF NOT EXISTS awb.payment_status_master (
   id              BIGSERIAL PRIMARY KEY,
   status_code     VARCHAR(20)  NOT NULL UNIQUE,
   status_name     VARCHAR(60)  NOT NULL UNIQUE,
   display_order   INT          NOT NULL DEFAULT 0,
-  active          BOOLEAN      NOT NULL DEFAULT TRUE,
-  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+  active          BOOLEAN      NOT NULL DEFAULT TRUE
+) INHERITS (master.audit);
 
 INSERT INTO awb.application_status_master (status_code, status_name, display_order)
 VALUES
@@ -37,12 +36,8 @@ CREATE TABLE IF NOT EXISTS awb.district (
   code            VARCHAR(20)  NOT NULL UNIQUE,
   name            VARCHAR(200) NOT NULL,
   active          BOOLEAN      NOT NULL DEFAULT TRUE,
-  created_by      VARCHAR(100),
-  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_modified_by VARCHAR(100),
-  last_modified_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uq_awb_district_name UNIQUE (name)
-);
+) INHERITS (master.audit); 
 CREATE INDEX IF NOT EXISTS idx_awb_district_name ON awb.district (lower(name));
 
 -- Link organisational offices to geographic district (CVO / DISTRICT offices).
@@ -61,14 +56,10 @@ CREATE TABLE IF NOT EXISTS awb.fee_schedule (
   effective_from  DATE         NOT NULL DEFAULT CURRENT_DATE,
   effective_to    DATE         NULL,
   active          BOOLEAN      NOT NULL DEFAULT TRUE,
-  created_by      VARCHAR(100),
-  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_modified_by VARCHAR(100),
-  last_modified_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uq_awb_fee_schedule UNIQUE (entity_type, fee_kind, effective_from),
   CONSTRAINT chk_awb_fee_entity_type CHECK (entity_type IN ('PET_SHOP', 'DOG_BREEDER')),
   CONSTRAINT chk_awb_fee_kind CHECK (fee_kind IN ('REGISTRATION', 'RENEWAL'))
-);
+) INHERITS (master.audit);
 
 CREATE TABLE IF NOT EXISTS awb.document_type (
   id              BIGSERIAL PRIMARY KEY,
@@ -76,12 +67,8 @@ CREATE TABLE IF NOT EXISTS awb.document_type (
   name            VARCHAR(200) NOT NULL,
   entity_scope    VARCHAR(30)  NOT NULL,
   mandatory       BOOLEAN      NOT NULL DEFAULT FALSE,
-  active          BOOLEAN      NOT NULL DEFAULT TRUE,
-  created_by      VARCHAR(100),
-  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_modified_by VARCHAR(100),
-  last_modified_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
-);
+  active          BOOLEAN      NOT NULL DEFAULT TRUE 
+) INHERITS (master.audit);
 
 INSERT INTO awb.fee_schedule (entity_type, fee_kind, amount)
 VALUES ('PET_SHOP', 'REGISTRATION', 5000.00)
@@ -113,13 +100,9 @@ CREATE TABLE IF NOT EXISTS awb.registration_application (
   submitted_at            TIMESTAMP    NULL,
   forwarded_to_cvo_at     TIMESTAMP    NULL,
   forwarded_to_cvo_by     BIGINT       NULL REFERENCES master.users(id),
-  created_by              VARCHAR(100),
-  created_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_modified_by        VARCHAR(100),
-  last_modified_at        TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT chk_awb_311_entity_type CHECK (entity_type = 'PET_SHOP'),
   CONSTRAINT chk_awb_311_app_kind CHECK (application_kind = 'NEW')
-);
+) INHERITS (master.audit);
 CREATE INDEX IF NOT EXISTS idx_awb_311_reg_applicant ON awb.registration_application(applicant_user_id);
 CREATE INDEX IF NOT EXISTS idx_awb_311_reg_status ON awb.registration_application(status_id);
 CREATE INDEX IF NOT EXISTS idx_awb_311_reg_ho_inbox ON awb.registration_application(status_id, assigned_office_id)
@@ -143,12 +126,8 @@ CREATE TABLE IF NOT EXISTS awb.pet_shop_detail (
   contact_email         VARCHAR(255) NOT NULL,
   latitude              NUMERIC(10,7) NULL,
   longitude             NUMERIC(10,7) NULL,
-  registration_details  TEXT         NULL,
-  created_by            VARCHAR(100),
-  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_modified_by      VARCHAR(100),
-  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
-);
+  registration_details  TEXT         NULL
+) INHERITS (master.audit);
 
 -- -----------------------------------------------------------------------------
 -- 5. Identification & supporting documents
@@ -163,12 +142,8 @@ CREATE TABLE IF NOT EXISTS awb.application_document (
   mime_type             VARCHAR(120) NULL,
   file_size_bytes       BIGINT       NULL,
   uploaded_by           BIGINT       NULL REFERENCES master.users(id),
-  uploaded_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  created_by            VARCHAR(100),
-  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_modified_by      VARCHAR(100),
-  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
-);
+  uploaded_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+) INHERITS (master.audit);
 CREATE INDEX IF NOT EXISTS idx_awb_311_doc_application ON awb.application_document(application_id);
 
 -- -----------------------------------------------------------------------------
@@ -189,13 +164,9 @@ CREATE TABLE IF NOT EXISTS awb.payment_transaction (
   gateway_response      JSONB        NULL,
   receipt_number        VARCHAR(100) NULL UNIQUE,
   payment_date          TIMESTAMP    NULL,
-  payer_user_id         BIGINT       NULL REFERENCES master.users(id),
-  created_by            VARCHAR(100),
-  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_modified_by      VARCHAR(100),
-  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  payer_user_id         BIGINT       NULL REFERENCES master.users(id)
   CONSTRAINT chk_awb_311_payment_purpose CHECK (payment_purpose = 'REGISTRATION')
-);
+) INHERITS (master.audit);
 CREATE INDEX IF NOT EXISTS idx_awb_311_payment_app ON awb.payment_transaction(application_id);
 CREATE INDEX IF NOT EXISTS idx_awb_311_payment_status ON awb.payment_transaction(status_id);
 
@@ -217,10 +188,8 @@ CREATE TABLE IF NOT EXISTS awb.application_workflow (
   to_status_id          BIGINT       NOT NULL REFERENCES awb.application_status_master(id),
   action_by             BIGINT       NULL REFERENCES master.users(id),
   remarks               TEXT         NULL,
-  action_date           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  created_by            VARCHAR(100),
-  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+  action_date           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+) INHERITS (master.audit);
 CREATE INDEX IF NOT EXISTS idx_awb_311_workflow_app ON awb.application_workflow(application_id);
 
 -- -----------------------------------------------------------------------------
