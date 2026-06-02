@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS awb.application_status_master (
   status_name     VARCHAR(100) NOT NULL UNIQUE,
   display_order   INT          NOT NULL DEFAULT 0,
   active          BOOLEAN      NOT NULL DEFAULT TRUE,
-  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS awb.payment_status_master (
