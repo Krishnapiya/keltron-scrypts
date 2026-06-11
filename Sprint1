@@ -222,3 +222,98 @@ FROM master.users u
 JOIN master.role_master r ON r.role_name = 'ADMIN'
 WHERE u.username = 'admin'
 ON CONFLICT DO NOTHING;
+-----------------Executed By Krishnapriya -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS awb.pet_shop_facility (
+  id                              BIGSERIAL PRIMARY KEY,
+  pet_shop_detail_id              BIGINT       NOT NULL UNIQUE
+    REFERENCES awb.pet_shop_detail(id) ON DELETE CASCADE,
+  accommodation_infrastructure    TEXT         NULL,
+  working_hours                   VARCHAR(500) NULL,
+  rest_day                        VARCHAR(120) NULL,
+  ventilation_arrangement         TEXT         NULL,
+  lighting_arrangement            TEXT         NULL,
+  fire_safety_arrangement         TEXT         NULL,
+  heating_cooling_arrangement     TEXT         NULL,
+  power_backup_arrangement        TEXT         NULL,
+  food_storage_arrangement        TEXT         NULL,
+  cleanliness_waste_arrangement   TEXT         NULL,
+  dead_animal_disposal_arrangement TEXT        NULL,
+  veterinary_support_arrangement  TEXT         NULL,
+  created_by                      VARCHAR(100),
+  created_at                      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by                VARCHAR(100),
+  last_modified_at                TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_awb_ps_facility_detail
+  ON awb.pet_shop_facility(pet_shop_detail_id);
+
+CREATE TABLE IF NOT EXISTS awb.pet_shop_proposed_animal (
+  id                    BIGSERIAL PRIMARY KEY,
+  application_id        BIGINT       NOT NULL
+    REFERENCES awb.registration_application(id) ON DELETE CASCADE,
+  record_kind           VARCHAR(20)  NOT NULL DEFAULT 'PROPOSED',
+  species               VARCHAR(120) NOT NULL,
+  breed                 VARCHAR(120) NULL,
+  quantity              INTEGER      NULL CHECK (quantity IS NULL OR quantity >= 0),
+  description           TEXT         NULL,
+  price_offered         NUMERIC(12,2) NULL CHECK (price_offered IS NULL OR price_offered >= 0),
+  age_description       VARCHAR(200) NULL,
+  display_order         INTEGER      NOT NULL DEFAULT 0,
+  created_by            VARCHAR(100),
+  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by      VARCHAR(100),
+  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_awb_ps_animal_kind CHECK (
+    record_kind IN ('PROPOSED', 'RENEWAL_STOCK')
+  )
+);
+
+CREATE INDEX IF NOT EXISTS idx_awb_ps_animal_application
+  ON awb.pet_shop_proposed_animal(application_id);
+CREATE INDEX IF NOT EXISTS idx_awb_ps_animal_kind
+  ON awb.pet_shop_proposed_animal(application_id, record_kind);
+
+CREATE TABLE IF NOT EXISTS awb.application_declaration (
+  id                          BIGSERIAL PRIMARY KEY,
+  application_id              BIGINT       NOT NULL UNIQUE
+    REFERENCES awb.registration_application(id) ON DELETE CASCADE,
+  declaration_place           VARCHAR(200) NULL,
+  declaration_date            DATE         NULL,
+  information_accurate        BOOLEAN      NOT NULL DEFAULT FALSE,
+  affidavit_rule_2018_ack     BOOLEAN      NOT NULL DEFAULT FALSE,
+  affidavit_awbi_rules_ack    BOOLEAN      NOT NULL DEFAULT FALSE,
+  affidavit_conditions_ack    BOOLEAN      NOT NULL DEFAULT FALSE,
+  affidavit_cancellation_ack  BOOLEAN      NOT NULL DEFAULT FALSE,
+  affidavit_truth_ack         BOOLEAN      NOT NULL DEFAULT FALSE,
+  affidavit_deponent_name     VARCHAR(255) NULL,
+  signed_at                   TIMESTAMP    NULL,
+  created_by                  VARCHAR(100),
+  created_at                  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by            VARCHAR(100),
+  last_modified_at            TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_awb_app_declaration_app
+  ON awb.application_declaration(application_id);
+
+INSERT INTO awb.document_type (code, name, entity_scope, mandatory)
+VALUES
+  ('AFFIDAVIT',           'Signed Affidavit',              'PET_SHOP', true),
+  ('FACILITY_PHOTO',      'Facility Photograph',           'PET_SHOP', true),
+  ('RENEWAL_RECEIPT',     'Previous Year Sale Receipts',   'PET_SHOP', false),
+  ('RENEWAL_DEATH_RECORD','Animal Death Records',          'PET_SHOP', false)
+ON CONFLICT (code) DO UPDATE SET
+  name       = EXCLUDED.name,
+  entity_scope = EXCLUDED.entity_scope,
+  mandatory  = EXCLUDED.mandatory,
+  active     = true;
+
+-- Ensure legacy codes stay active if already seeded by 3.1.1 script
+UPDATE awb.document_type
+SET mandatory = true, active = true
+WHERE code IN ('ID_PROOF', 'ADDRESS_PROOF')
+  AND entity_scope = 'PET_SHOP';
+
+-------------Krishnapriya on 11 June 2026 --------------------------------
+
