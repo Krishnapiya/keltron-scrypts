@@ -316,4 +316,46 @@ WHERE code IN ('ID_PROOF', 'ADDRESS_PROOF')
   AND entity_scope = 'PET_SHOP';
 
 -------------Krishnapriya on 11 June 2026 --------------------------------
+CREATE TABLE IF NOT EXISTS awb.dog_breeder_detail (
+  id                    BIGSERIAL PRIMARY KEY,
+  application_id        BIGINT       NOT NULL UNIQUE REFERENCES awb.registration_application(id) ON DELETE CASCADE,
+  breeder_name          VARCHAR(255) NOT NULL,
+  address_line1         VARCHAR(500) NOT NULL,
+  address_line2         VARCHAR(500) NULL,
+  city                  VARCHAR(120) NULL,
+  pincode               VARCHAR(10)  NULL,
+  contact_mobile        VARCHAR(20)  NOT NULL,
+  contact_email         VARCHAR(255) NOT NULL,
+  facility_details      TEXT         NULL,
+  total_dogs_count      INTEGER      NULL CHECK (total_dogs_count IS NULL OR total_dogs_count >= 0),
+  created_by            VARCHAR(100),
+  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by      VARCHAR(100),
+  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS awb.dog_breeder_breed (
+  id                    BIGSERIAL PRIMARY KEY,
+  dog_breeder_detail_id BIGINT       NOT NULL REFERENCES awb.dog_breeder_detail(id) ON DELETE CASCADE,
+  breed_name            VARCHAR(200) NOT NULL,
+  dog_count             INTEGER      NOT NULL DEFAULT 0 CHECK (dog_count >= 0),
+  created_by            VARCHAR(100),
+  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by      VARCHAR(100),
+  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uq_awb_breeder_breed UNIQUE (dog_breeder_detail_id, breed_name)
+);
+
+CREATE TABLE IF NOT EXISTS awb.application_correction (
+  id                    BIGSERIAL PRIMARY KEY,
+  application_id        BIGINT       NOT NULL REFERENCES awb.registration_application(id) ON DELETE CASCADE,
+  correction_summary    TEXT         NOT NULL,
+  submitted_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  submitted_by          BIGINT       NOT NULL REFERENCES master.users(id),
+  created_by            VARCHAR(100),
+  created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_modified_by      VARCHAR(100),
+  last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_awb_app_correction_app ON awb.application_correction(application_id);
 
