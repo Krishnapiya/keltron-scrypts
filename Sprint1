@@ -390,6 +390,27 @@ WHERE r.role_name = 'PET_SHOP_OWNER'
   AND a.action_key IN ('save', 'list', 'edit')
 ON CONFLICT (role_id, menu_id, action_id) DO UPDATE SET allowed = EXCLUDED.allowed;
 
-COMMIT;
+INSERT INTO master.modules (name, slug, display_order, active)
+VALUES ('Master', 'master', 10, true)
+ON CONFLICT (slug) DO UPDATE SET active = true;
+
+INSERT INTO master.menus (module_id, name, slug, path, display_order, active)
+SELECT m.id, 'District', 'district', 'district', 15, true
+FROM master.modules m
+WHERE m.slug = 'master'
+ON CONFLICT (module_id, slug) DO UPDATE SET
+  name = EXCLUDED.name,
+  path = EXCLUDED.path,
+  active = EXCLUDED.active;
+
+INSERT INTO master.role_menu_permissions (role_id, menu_id, action_id, allowed)
+SELECT r.id, m.id, a.id, true
+FROM master.role_master r
+CROSS JOIN master.menus m
+CROSS JOIN master.permission_actions a
+WHERE r.role_name = 'PET_SHOP_OWNER'
+  AND m.slug IN ('pet-shop-register', 'pet-shop-my-applications', 'district')
+  AND a.action_key IN ('save', 'list', 'edit')
+ON CONFLICT (role_id, menu_id, action_id) DO UPDATE SET allowed = EXCLUDED.allowed;
 
 
