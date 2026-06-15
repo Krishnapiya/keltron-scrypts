@@ -358,4 +358,38 @@ CREATE TABLE IF NOT EXISTS awb.application_correction (
   last_modified_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_awb_app_correction_app ON awb.application_correction(application_id);
+---------------Krishnapriya on 15 June -------------------------------------------------
+INSERT INTO master.role_master (role_name)
+VALUES ('PET_SHOP_OWNER')
+ON CONFLICT (role_name) DO NOTHING;
+
+INSERT INTO master.modules (name, slug, display_order, active)
+VALUES ('Pet Shop', 'pet-shop', 20, true)
+ON CONFLICT (slug) DO UPDATE SET active = true;
+
+INSERT INTO master.menus (module_id, name, slug, path, display_order, active)
+SELECT m.id, v.name, v.slug, v.path, v.ord, true
+FROM master.modules m
+JOIN (VALUES
+  ('pet-shop', 'New Registration', 'pet-shop-register', 'pet-shop/register', 10),
+  ('pet-shop', 'My Applications', 'pet-shop-my-applications', 'pet-shop/my-applications', 20)
+) AS v(module_slug, name, slug, path, ord) ON m.slug = v.module_slug
+ON CONFLICT (module_id, slug) DO UPDATE SET
+  name = EXCLUDED.name,
+  path = EXCLUDED.path,
+  display_order = EXCLUDED.display_order,
+  active = EXCLUDED.active;
+
+INSERT INTO master.role_menu_permissions (role_id, menu_id, action_id, allowed)
+SELECT r.id, m.id, a.id, true
+FROM master.role_master r
+CROSS JOIN master.menus m
+CROSS JOIN master.permission_actions a
+WHERE r.role_name = 'PET_SHOP_OWNER'
+  AND m.slug IN ('pet-shop-register', 'pet-shop-my-applications')
+  AND a.action_key IN ('save', 'list', 'edit')
+ON CONFLICT (role_id, menu_id, action_id) DO UPDATE SET allowed = EXCLUDED.allowed;
+
+COMMIT;
+
 
