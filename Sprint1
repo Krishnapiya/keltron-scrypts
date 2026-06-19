@@ -453,7 +453,8 @@ ALTER TABLE master.animal_species
 ADD COLUMN last_modified_at timestamp DEFAULT CURRENT_TIMESTAMP;
 
 
-____________________________________________________
+---------------Athul krishna on 19 June -------------------------------------------------
+
 ALTER TABLE awb.registration_application
 DROP CONSTRAINT IF EXISTS chk_awb_311_entity_type;
 
