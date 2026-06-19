@@ -413,4 +413,41 @@ WHERE r.role_name = 'PET_SHOP_OWNER'
   AND a.action_key IN ('save', 'list', 'edit')
 ON CONFLICT (role_id, menu_id, action_id) DO UPDATE SET allowed = EXCLUDED.allowed;
 
+---------------Athul krishna on 19 June -------------------------------------------------
+CREATE TABLE master.animal_species (
+    id bigserial PRIMARY KEY,
+    species_name varchar(120) NOT NULL UNIQUE,
+    is_active boolean DEFAULT true
+);
 
+INSERT INTO master.animal_species(species_name)
+VALUES
+('Dog'),
+('Cat'),
+('Rabbit'),
+('Bird'),
+('Hamster');
+
+ALTER TABLE awb.pet_shop_proposed_animal
+RENAME COLUMN species TO species_id;
+
+ALTER TABLE awb.pet_shop_proposed_animal
+ALTER COLUMN species_id TYPE BIGINT
+USING NULL;
+
+ALTER TABLE awb.pet_shop_proposed_animal
+ADD CONSTRAINT fk_ps_species
+FOREIGN KEY (species_id)
+REFERENCES master.animal_species(id);
+
+ALTER TABLE master.animal_species
+ADD COLUMN created_by varchar(100);
+
+ALTER TABLE master.animal_species
+ADD COLUMN created_at timestamp DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE master.animal_species
+ADD COLUMN last_modified_by varchar(100);
+
+ALTER TABLE master.animal_species
+ADD COLUMN last_modified_at timestamp DEFAULT CURRENT_TIMESTAMP;
