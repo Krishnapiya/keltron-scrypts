@@ -451,3 +451,146 @@ ADD COLUMN last_modified_by varchar(100);
 
 ALTER TABLE master.animal_species
 ADD COLUMN last_modified_at timestamp DEFAULT CURRENT_TIMESTAMP;
+
+
+____________________________________________________
+ALTER TABLE awb.registration_application
+DROP CONSTRAINT IF EXISTS chk_awb_311_entity_type;
+
+
+ALTER TABLE awb.registration_application
+ADD CONSTRAINT chk_awb_311_entity_type
+CHECK (entity_type IN ('PET_SHOP', 'DOG_BREEDER'));
+
+
+CREATE TABLE awb.dog_breeder_facility (
+    id bigserial NOT NULL,
+
+    dog_breeder_detail_id int8 NOT NULL,
+
+    accommodation_infrastructure text NULL,
+    working_hours varchar(500) NULL,
+    rest_day varchar(120) NULL,
+
+    ventilation_arrangement text NULL,
+    lighting_arrangement text NULL,
+
+    heating_cooling_arrangement text NULL,
+    food_storage_arrangement text NULL,
+    cleanliness_waste_arrangement text NULL,
+    dead_animal_disposal_arrangement text NULL,
+    veterinary_support_arrangement text NULL,
+
+    cage_enclosure_details text NULL,
+
+    created_by varchar(100) NULL,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_modified_by varchar(100) NULL,
+    last_modified_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+
+    CONSTRAINT dog_breeder_facility_pkey 
+        PRIMARY KEY (id),
+
+    CONSTRAINT dog_breeder_facility_dog_breeder_detail_id_key 
+        UNIQUE (dog_breeder_detail_id),
+
+    CONSTRAINT dog_breeder_facility_dog_breeder_detail_id_fkey 
+        FOREIGN KEY (dog_breeder_detail_id) 
+        REFERENCES awb.dog_breeder_detail(id) 
+        ON DELETE CASCADE
+);
+
+CREATE INDEX idx_awb_db_facility_detail 
+ON awb.dog_breeder_facility USING btree (dog_breeder_detail_id);
+
+INSERT INTO awb.dog_breeder_facility (
+    dog_breeder_detail_id,
+    accommodation_infrastructure,
+    working_hours,
+    rest_day,
+    ventilation_arrangement,
+    lighting_arrangement,
+    heating_cooling_arrangement,
+    food_storage_arrangement,
+    cleanliness_waste_arrangement,
+    dead_animal_disposal_arrangement,
+    veterinary_support_arrangement,
+    cage_enclosure_details,
+    created_by,
+    last_modified_by
+)
+VALUES (
+    19,
+    'Kennel facility with separate cages and proper shelter',
+    '9 AM to 6 PM',
+    'Sunday',
+    'Proper ventilation provided',
+    'Adequate natural and artificial lighting',
+    'Fan and cooling arrangement available',
+    'Separate food storage area available',
+    'Daily cleaning and waste disposal maintained',
+    'Dead animals will be disposed as per rules',
+    'Veterinary doctor support available',
+    'Separate cages and enclosures are provided for dogs',
+    'DOGBREEDER1',
+    'DOGBREEDER1'
+);
+
+ALTER TABLE awb.dog_breeder_breed
+ADD COLUMN age_description varchar(200) NULL,
+
+CREATE TABLE awb.dog_breeder_declaration (
+    id BIGSERIAL PRIMARY KEY,
+
+    dog_breeder_detail_id BIGINT NOT NULL UNIQUE,
+
+    qualification_experience TEXT,
+
+    declaration_accepted BOOLEAN DEFAULT FALSE,
+
+    declaration_place VARCHAR(150),
+
+    declaration_date DATE,
+
+    applicant_name VARCHAR(200),
+
+    signature_name VARCHAR(200),
+
+    signed_at TIMESTAMP,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    last_modified_at TIMESTAMP,
+    last_modified_by VARCHAR(255),
+
+    CONSTRAINT fk_dog_breeder_declaration_detail
+        FOREIGN KEY (dog_breeder_detail_id)
+        REFERENCES awb.dog_breeder_detail(id)
+        ON DELETE CASCADE
+);
+
+INSERT INTO awb.dog_breeder_declaration (
+    dog_breeder_detail_id,
+    qualification_experience,
+    declaration_accepted,
+    declaration_place,
+    declaration_date,
+    applicant_name,
+    signature_name,
+    signed_at,
+    created_by,
+    last_modified_by
+)
+VALUES (
+    19,
+    'Experienced in dog breeding and kennel maintenance',
+    TRUE,
+    'Trivandrum',
+    CURRENT_DATE,
+    'Dog Breeder',
+    'Dog Breeder',
+    CURRENT_TIMESTAMP,
+    'DOGBREEDER1',
+    'DOGBREEDER1'
+);
+---------------Salini S Raj on 19 June -------------------------------------------------
