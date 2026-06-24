@@ -538,7 +538,7 @@ VALUES (
 );
 
 ALTER TABLE awb.dog_breeder_breed
-ADD COLUMN age_description varchar(200) NULL,
+ADD COLUMN age_description varchar(200) NULL;
 
 CREATE TABLE awb.dog_breeder_declaration (
     id BIGSERIAL PRIMARY KEY,
