@@ -595,3 +595,30 @@ VALUES (
     'DOGBREEDER1'
 );
 ---------------Salini S Raj on 19 June -------------------------------------------------
+ALTER TABLE awb.document_type
+DROP CONSTRAINT IF EXISTS document_type_code_key;
+
+ALTER TABLE awb.document_type
+DROP CONSTRAINT IF EXISTS document_type_code_entity_scope_key;
+
+ALTER TABLE awb.document_type
+ADD CONSTRAINT document_type_code_entity_scope_key
+UNIQUE (code, entity_scope);
+
+INSERT INTO awb.document_type
+(code, name, entity_scope, mandatory, active)
+VALUES
+('ID_PROOF', 'Identity Proof', 'DOG_BREEDER', true, true),
+('ADDRESS_PROOF', 'Address Proof', 'DOG_BREEDER', true, true),
+('ESTABLISHMENT_PHOTO', 'Establishment Photograph', 'DOG_BREEDER', true, true),
+('INFRASTRUCTURE_PHOTO', 'Infrastructure Photograph', 'DOG_BREEDER', true, true),
+('AFFIDAVIT', 'Affidavit', 'DOG_BREEDER', true, true),
+('APPLICANT_SIGNATURE', 'Applicant Signature', 'DOG_BREEDER', false, true)
+ON CONFLICT (code, entity_scope)
+DO UPDATE SET
+    name = EXCLUDED.name,
+    mandatory = EXCLUDED.mandatory,
+    active = EXCLUDED.active
+RETURNING id, code, name, entity_scope;
+
+---------------Salini S Raj on 04 July -------------------------------------------------
