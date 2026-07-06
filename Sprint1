@@ -610,3 +610,9 @@ VALUES
     true
 );
 ---------------Athul Krishna MS on 06 July -------------------------------------------------
+ALTER TABLE awb.pet_shop_proposed_animal
+
+ALTER COLUMN species_id TYPE BIGINT
+
+USING species_id::BIGINT;
+---------------Athul Krishna MS on 06 July -------------------------------------------------
