@@ -618,7 +618,7 @@ ALTER TABLE awb.pet_shop_proposed_animal
 ALTER COLUMN species_id TYPE BIGINT
 USING species_id::BIGINT;
 
-
+ALTER TABLE awb.pet_shop_proposed_animal DROP CONSTRAINT fk_ps_species;
 --  Add the foreign key (only if it doesn't already exist)
 ALTER TABLE awb.pet_shop_proposed_animal
 ADD CONSTRAINT fk_ps_species
