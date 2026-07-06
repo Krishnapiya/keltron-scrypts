@@ -433,7 +433,7 @@ RENAME COLUMN species TO species_id;
 
 ALTER TABLE awb.pet_shop_proposed_animal
 ALTER COLUMN species_id TYPE BIGINT
-USING NULL;
+USING NULL::BIGINT;
 
 ALTER TABLE awb.pet_shop_proposed_animal
 ADD CONSTRAINT fk_ps_species
