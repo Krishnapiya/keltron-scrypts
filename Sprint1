@@ -622,3 +622,20 @@ DO UPDATE SET
 RETURNING id, code, name, entity_scope;
 
 ---------------Salini S Raj on 04 July -------------------------------------------------
+INSERT INTO awb.document_type
+(
+    code,
+    name,
+    entity_scope,
+    mandatory,
+    active
+)
+VALUES
+(
+    'APPLICANT_SIGNATURE',
+    'Applicant Signature',
+    'PET_SHOP',
+    false,
+    true
+);
+---------------Athul Krishna MS on 06 July -------------------------------------------------
