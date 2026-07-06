@@ -618,13 +618,6 @@ ALTER TABLE awb.pet_shop_proposed_animal
 ALTER COLUMN species_id TYPE BIGINT
 USING species_id::BIGINT;
 
-INSERT INTO master.animal_species (species_name)
-VALUES
-('Dog'),
-('Cat'),
-('Rabbit'),
-('Bird'),
-('Hamster');
 
 --  Add the foreign key (only if it doesn't already exist)
 ALTER TABLE awb.pet_shop_proposed_animal
