@@ -610,9 +610,25 @@ VALUES
     true
 );
 ---------------Athul Krishna MS on 06 July -------------------------------------------------
+DELETE FROM awb.pet_shop_proposed_animal;
+
+DELETE FROM master.animal_species;
+
 ALTER TABLE awb.pet_shop_proposed_animal
-
 ALTER COLUMN species_id TYPE BIGINT
-
 USING species_id::BIGINT;
+
+INSERT INTO master.animal_species (species_name)
+VALUES
+('Dog'),
+('Cat'),
+('Rabbit'),
+('Bird'),
+('Hamster');
+
+--  Add the foreign key (only if it doesn't already exist)
+ALTER TABLE awb.pet_shop_proposed_animal
+ADD CONSTRAINT fk_ps_species
+FOREIGN KEY (species_id)
+REFERENCES master.animal_species(id);
 ---------------Athul Krishna MS on 06 July -------------------------------------------------
