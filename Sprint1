@@ -625,3 +625,11 @@ ADD CONSTRAINT fk_ps_species
 FOREIGN KEY (species_id)
 REFERENCES master.animal_species(id);
 ---------------Athul Krishna MS on 06 July -------------------------------------------------
+ALTER TABLE awb.pet_shop_detail
+ADD COLUMN father_or_husband_name VARCHAR(255);
+
+ALTER TABLE awb.pet_shop_detail
+ADD COLUMN age INTEGER;
+
+---------------Athul Krishna MS on 14 July -------------------------------------------------
+
