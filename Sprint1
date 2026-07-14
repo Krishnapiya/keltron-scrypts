@@ -475,38 +475,7 @@ CREATE TABLE awb.dog_breeder_facility (
 CREATE INDEX idx_awb_db_facility_detail 
 ON awb.dog_breeder_facility USING btree (dog_breeder_detail_id);
 
-INSERT INTO awb.dog_breeder_facility (
-    dog_breeder_detail_id,
-    accommodation_infrastructure,
-    working_hours,
-    rest_day,
-    ventilation_arrangement,
-    lighting_arrangement,
-    heating_cooling_arrangement,
-    food_storage_arrangement,
-    cleanliness_waste_arrangement,
-    dead_animal_disposal_arrangement,
-    veterinary_support_arrangement,
-    cage_enclosure_details,
-    created_by,
-    last_modified_by
-)
-VALUES (
-    19,
-    'Kennel facility with separate cages and proper shelter',
-    '9 AM to 6 PM',
-    'Sunday',
-    'Proper ventilation provided',
-    'Adequate natural and artificial lighting',
-    'Fan and cooling arrangement available',
-    'Separate food storage area available',
-    'Daily cleaning and waste disposal maintained',
-    'Dead animals will be disposed as per rules',
-    'Veterinary doctor support available',
-    'Separate cages and enclosures are provided for dogs',
-    'DOGBREEDER1',
-    'DOGBREEDER1'
-);
+
 
 ALTER TABLE awb.dog_breeder_breed
 ADD COLUMN age_description VARCHAR(200) NULL;
@@ -541,30 +510,7 @@ CREATE TABLE awb.dog_breeder_declaration (
         ON DELETE CASCADE
 );
 
-INSERT INTO awb.dog_breeder_declaration (
-    dog_breeder_detail_id,
-    qualification_experience,
-    declaration_accepted,
-    declaration_place,
-    declaration_date,
-    applicant_name,
-    signature_name,
-    signed_at,
-    created_by,
-    last_modified_by
-)
-VALUES (
-    19,
-    'Experienced in dog breeding and kennel maintenance',
-    TRUE,
-    'Trivandrum',
-    CURRENT_DATE,
-    'Dog Breeder',
-    'Dog Breeder',
-    CURRENT_TIMESTAMP,
-    'DOGBREEDER1',
-    'DOGBREEDER1'
-);
+
 ---------------Salini S Raj on 19 June -------------------------------------------------
 ALTER TABLE awb.document_type
 DROP CONSTRAINT IF EXISTS document_type_code_key;
