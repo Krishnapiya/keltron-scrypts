@@ -578,4 +578,17 @@ ALTER TABLE awb.pet_shop_detail
 ADD COLUMN age INTEGER;
 
 ---------------Athul Krishna MS on 14 July -------------------------------------------------
+ALTER TABLE awb.pet_shop_facility
+ADD COLUMN ventilation_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN lighting_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN fire_safety_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN heating_cooling_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN power_backup_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN food_storage_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN cleanliness_waste_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN dead_animal_disposal_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN veterinary_support_available BOOLEAN DEFAULT FALSE;
 
+ALTER TABLE awb.pet_shop_proposed_animal
+ADD COLUMN gender VARCHAR(20);
+---------------Athul Krishna MS on 16 July -------------------------------------------------
