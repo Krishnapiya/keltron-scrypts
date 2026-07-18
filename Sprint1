@@ -592,3 +592,15 @@ ADD COLUMN veterinary_support_available BOOLEAN DEFAULT FALSE;
 ALTER TABLE awb.pet_shop_proposed_animal
 ADD COLUMN gender VARCHAR(20);
 ---------------Athul Krishna MS on 16 July -------------------------------------------------
+ALTER TABLE awb.dog_breeder_facility
+ADD COLUMN ventilation_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN lighting_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN heating_cooling_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN food_storage_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN cleanliness_waste_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN dead_animal_disposal_available BOOLEAN DEFAULT FALSE,
+ADD COLUMN veterinary_support_available BOOLEAN DEFAULT FALSE;
+
+ALTER TABLE awb.dog_breeder_facility
+RENAME COLUMN rest_day TO holiday;
+---------------Salini S Raj on 18 July -------------------------------------------------
