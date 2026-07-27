@@ -646,9 +646,14 @@ CONSTRAINT notification_user_id_fkey
 -- Index for module-wise lookup CREATE INDEX idx_notification_module_reference ON master.notification(module, reference_id);
 
 =================
-INSERT INTO awb.application_status_master (status_code, status_name, display_order) 
-VALUES ('INSPECTION_SCHEDULED', 'Inspection Scheduled', 20), ('VERIFIED_BY_CVO',      'Verified by CVO',      30), ('REJECTED_BY_CVO',      'Rejected by CVO',    
-35), ('APPLICATION_APPROVED', 'Application Approved', 40), ('APPLICATION_REJECTED', 'Application Rejected', 45) ON CONFLICT (status_code) DO NOTHING;
-
+INSERT INTO awb.application_status_master
+(status_code, status_name, display_order)
+VALUES
+('INSPECTION_SCHEDULED', 'Inspection Scheduled', 20),
+('VERIFIED_BY_CVO', 'Verified by CVO', 30),
+('REJECTED_BY_CVO', 'Rejected by CVO', 35),
+('APPLICATION_APPROVED', 'Application Approved', 40),
+('APPLICATION_REJECTED', 'Application Rejected', 45)
+ON CONFLICT (status_code) DO NOTHING;
 ---------------Athul Krishna MS on 27 July -------------------------------------------------
 
