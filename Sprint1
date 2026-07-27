@@ -604,3 +604,51 @@ ADD COLUMN veterinary_support_available BOOLEAN DEFAULT FALSE;
 ALTER TABLE awb.dog_breeder_facility
 RENAME COLUMN rest_day TO holiday;
 ---------------Salini S Raj on 18 July -------------------------------------------------
+
+CREATE TABLE awb.registration_inspection (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT NOT NULL,
+    inspection_date DATE NOT NULL,
+    inspection_remarks TEXT,
+    inspection_report VARCHAR(255),
+    recommendation VARCHAR(20),
+    status VARCHAR(30),
+
+    CONSTRAINT fk_registration_inspection_application
+        FOREIGN KEY (application_id)
+        REFERENCES awb.registration_application(id)
+)
+INHERITS (master.audit);
+=========================================================
+CREATE TABLE master.notification ( id BIGSERIAL NOT NULL,
+user_id BIGINT NOT NULL,
+
+module VARCHAR(50) NOT NULL,
+
+reference_id BIGINT,
+
+title VARCHAR(255) NOT NULL,
+
+message TEXT NOT NULL,
+
+notification_type VARCHAR(50) NOT NULL,
+
+is_read BOOLEAN NOT NULL DEFAULT FALSE,
+
+CONSTRAINT notification_pkey PRIMARY KEY (id),
+
+CONSTRAINT notification_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES master.users(id)
+) INHERITS (master.audit);
+-- Index to fetch notifications of a user CREATE INDEX idx_notification_user ON master.notification(user_id);
+-- Index to fetch unread notifications quickly CREATE INDEX idx_notification_user_read ON master.notification(user_id, is_read);
+-- Index for module-wise lookup CREATE INDEX idx_notification_module_reference ON master.notification(module, reference_id);
+
+=================
+INSERT INTO awb.application_status_master (status_code, status_name, display_order) 
+VALUES ('INSPECTION_SCHEDULED', 'Inspection Scheduled', 20), ('VERIFIED_BY_CVO',      'Verified by CVO',      30), ('REJECTED_BY_CVO',      'Rejected by CVO',    
+35), ('APPLICATION_APPROVED', 'Application Approved', 40), ('APPLICATION_REJECTED', 'Application Rejected', 45) ON CONFLICT (status_code) DO NOTHING;
+
+---------------Athul Krishna MS on 27 July -------------------------------------------------
+
