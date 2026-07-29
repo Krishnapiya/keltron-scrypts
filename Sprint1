@@ -620,30 +620,44 @@ CREATE TABLE awb.registration_inspection (
 )
 INHERITS (master.audit);
 =========================================================
-CREATE TABLE master.notification ( id BIGSERIAL NOT NULL,
-user_id BIGINT NOT NULL,
+DROP TABLE IF EXISTS master.notification CASCADE;
 
-module VARCHAR(50) NOT NULL,
+CREATE TABLE master.notification (
+    id BIGSERIAL NOT NULL,
 
-reference_id BIGINT,
+    user_id BIGINT NOT NULL,
 
-title VARCHAR(255) NOT NULL,
+    module VARCHAR(50) NOT NULL,
 
-message TEXT NOT NULL,
+    reference_id BIGINT,
 
-notification_type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
 
-is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    message TEXT NOT NULL,
 
-CONSTRAINT notification_pkey PRIMARY KEY (id),
+    notification_type VARCHAR(50) NOT NULL,
 
-CONSTRAINT notification_user_id_fkey
-    FOREIGN KEY (user_id)
-    REFERENCES master.users(id)
-) INHERITS (master.audit);
--- Index to fetch notifications of a user CREATE INDEX idx_notification_user ON master.notification(user_id);
--- Index to fetch unread notifications quickly CREATE INDEX idx_notification_user_read ON master.notification(user_id, is_read);
--- Index for module-wise lookup CREATE INDEX idx_notification_module_reference ON master.notification(module, reference_id);
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+
+    CONSTRAINT notification_pkey PRIMARY KEY (id),
+
+    CONSTRAINT notification_user_id_fkey
+        FOREIGN KEY (user_id)
+        REFERENCES master.users(id)
+)
+INHERITS (master.audit);
+
+-- Index to fetch notifications of a user
+CREATE INDEX idx_notification_user
+ON master.notification(user_id);
+
+-- Index to fetch unread notifications quickly
+CREATE INDEX idx_notification_user_read
+ON master.notification(user_id, is_read);
+
+-- Index for module-wise lookup
+CREATE INDEX idx_notification_module_reference
+ON master.notification(module, reference_id);
 
 =================
 INSERT INTO awb.application_status_master
