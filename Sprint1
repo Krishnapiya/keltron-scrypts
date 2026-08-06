@@ -755,4 +755,48 @@ VALUES (
 );
 
 ---------------Athul Krishna MS on 03 Aug -------------------------------------------------
+CREATE TABLE awb.dogbreeder_registration_inspection (
+    id bigserial NOT NULL,
+    application_id int8 NOT NULL,
+    inspection_date date NOT NULL,
+    inspection_remarks text NULL,
+    inspection_report varchar(255) NULL,
+    recommendation varchar(20) NULL,
+    
+    
+    CONSTRAINT dogbreeder_registration_inspection_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_dogbreeder_registration_inspection_application 
+        FOREIGN KEY (application_id) 
+        REFERENCES awb.registration_application(id) 
+        ON DELETE CASCADE
+)
+INHERITS (master.audit);
 
+-- Create dogbreeder_registration_application_resubmission table
+CREATE TABLE awb.dogbreeder_registration_application_resubmission (
+    id BIGSERIAL NOT NULL,
+    application_id INT8 NOT NULL,
+    remarks TEXT,
+    documents TEXT[] NOT NULL,
+    resubmitted_at TIMESTAMP,
+    resubmitted_by INT8,
+
+    CONSTRAINT dogbreeder_registration_application_resubmission_pkey
+        PRIMARY KEY (id),
+
+    CONSTRAINT fk_dogbreeder_resubmission_application
+        FOREIGN KEY (application_id)
+        REFERENCES awb.registration_application(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_dogbreeder_resubmission_user
+        FOREIGN KEY (resubmitted_by)
+        REFERENCES master.users(id)
+)
+INHERITS (master.audit);
+
+-- Add index on application_id for query performance
+CREATE INDEX idx_dogbreeder_resubmission_application_id
+ON awb.dogbreeder_registration_application_resubmission(application_id);
+
+--------------Salini S Raj on 06 Aug -------------------------------------------------
