@@ -671,8 +671,6 @@ VALUES
 ON CONFLICT (status_code) DO NOTHING;
 ---------------Athul Krishna MS on 27 July -------------------------------------------------
 
-ALTER TABLE awb.registration_inspection
-DROP COLUMN status;
 
 CREATE TABLE awb.registration_application_status_history (
     id BIGSERIAL PRIMARY KEY,
