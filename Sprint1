@@ -800,3 +800,147 @@ CREATE INDEX idx_dogbreeder_resubmission_application_id
 ON awb.dogbreeder_registration_application_resubmission(application_id);
 
 --------------Salini S Raj on 06 Aug -------------------------------------------------
+INSERT INTO master.role_master (role_name)
+VALUES ('CITIZEN');
+
+CREATE TABLE awb.complaint_registration (
+
+    id BIGSERIAL PRIMARY KEY,
+
+    complaint_number VARCHAR(30) UNIQUE NOT NULL,
+
+    citizen_user_id BIGINT NOT NULL,
+
+    place_of_incident VARCHAR(255) NOT NULL,
+
+    pet_animal_name VARCHAR(150),
+
+    complaint_description TEXT NOT NULL,
+
+    incident_date DATE NOT NULL,
+
+    photo_path VARCHAR(500),
+
+    video_path VARCHAR(500),
+
+    document_path VARCHAR(500),
+
+    status VARCHAR(30) NOT NULL DEFAULT 'SUBMITTED',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_complaint_user
+        FOREIGN KEY (citizen_user_id)
+        REFERENCES master.users(id)
+);
+
+
+
+ALTER TABLE awb.registration_inspection
+ADD COLUMN status VARCHAR(50);
+
+
+
+ALTER TABLE awb.complaint_registration
+ADD COLUMN created_by BIGINT;
+
+ALTER TABLE awb.complaint_registration
+ADD COLUMN last_modified_by BIGINT;
+
+
+ALTER TABLE awb.complaint_registration
+DROP COLUMN created_by;
+
+ALTER TABLE awb.complaint_registration
+ADD COLUMN created_by VARCHAR(255);
+
+ALTER TABLE awb.complaint_registration
+DROP COLUMN last_modified_by;
+
+ALTER TABLE awb.complaint_registration
+ADD COLUMN last_modified_by VARCHAR(255);
+
+INSERT INTO awb.application_status_master
+(status_code, status_name, display_order)
+VALUES
+('UNDER_REVIEW','Under Review',50),
+('INVESTIGATION_SCHEDULED','Investigation Scheduled',60),
+('ACTION_TAKEN','Action Taken',70)
+ON CONFLICT(status_code) DO NOTHING;
+
+
+ALTER TABLE awb.complaint_registration
+RENAME COLUMN status TO status_id;
+
+ALTER TABLE awb.complaint_registration
+ALTER COLUMN status_id TYPE BIGINT
+USING NULL;
+
+ALTER TABLE awb.complaint_registration
+DROP COLUMN status_id;
+
+
+ALTER TABLE awb.complaint_registration
+ADD COLUMN status_id BIGINT;
+
+ALTER TABLE awb.complaint_registration
+ADD CONSTRAINT fk_complaint_registration_status
+FOREIGN KEY (status_id)
+REFERENCES awb.application_status_master(id);
+
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'awb'
+AND table_name = 'complaint_registration';
+
+SELECT id,
+       status_code,
+       status_name
+FROM awb.application_status_master
+WHERE id = 7;
+
+
+
+CREATE TABLE awb.complaint_document (
+    id BIGSERIAL NOT NULL,
+    complaint_id INT8 NOT NULL,
+    document_type_id INT8 NULL,
+    file_name VARCHAR(500) NOT NULL,
+    file_path VARCHAR(1000) NOT NULL,
+    mime_type VARCHAR(120) NULL,
+    file_size_bytes INT8 NULL,
+    uploaded_by INT8 NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    CONSTRAINT complaint_document_pkey
+        PRIMARY KEY (id),
+
+    CONSTRAINT complaint_document_complaint_id_fkey
+        FOREIGN KEY (complaint_id)
+        REFERENCES awb.complaint_registration(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT complaint_document_document_type_id_fkey
+        FOREIGN KEY (document_type_id)
+        REFERENCES awb.document_type(id),
+
+    CONSTRAINT complaint_document_uploaded_by_fkey
+        FOREIGN KEY (uploaded_by)
+        REFERENCES master.users(id)
+)
+INHERITS (master.audit);
+
+CREATE INDEX idx_awb_complaint_document_complaint
+ON awb.complaint_document
+USING btree (complaint_id);
+
+--------------Athul Krishna MS on 10 Aug -------------------------------------------------
+
+
+
+
+
+
