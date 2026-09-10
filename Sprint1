@@ -984,5 +984,8 @@ ADD COLUMN last_modified_at TIMESTAMP;
 
 --------------Salini S Raj on 24 Aug -------------------------------------------------
 
+ALTER TABLE awb.dogbreeder_registration_inspection
+ADD COLUMN report_remarks TEXT NULL;
 
+--------------Salini S Raj on 10 Sep -------------------------------------------------
 
