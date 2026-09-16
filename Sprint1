@@ -990,3 +990,85 @@ ADD COLUMN report_remarks TEXT NULL;
 
 --------------Salini S Raj on 10 Sep -------------------------------------------------
 
+CREATE TABLE awb.complaint_investigation (
+
+    id bigserial NOT NULL,
+
+    complaint_id int8 NOT NULL,
+
+    investigation_date date NULL,
+
+    investigation_remarks varchar(2000) NULL,
+
+    investigation_report_path varchar(1000) NULL,
+
+    report_remarks varchar(2000) NULL,
+
+    recommendation varchar(100) NULL,
+
+    CONSTRAINT complaint_investigation_pkey
+        PRIMARY KEY (id),
+
+    CONSTRAINT complaint_investigation_complaint_id_fkey
+        FOREIGN KEY (complaint_id)
+        REFERENCES awb.complaint_registration(id)
+        ON DELETE CASCADE
+
+)
+INHERITS (master.audit);
+
+CREATE INDEX idx_awb_complaint_investigation_complaint
+    ON awb.complaint_investigation
+    USING btree (complaint_id);
+
+
+
+CREATE TABLE awb.complaint_registration_status_history (
+    id bigserial NOT NULL,
+
+    complaint_id int8 NOT NULL,
+
+    from_status varchar(50) NULL,
+
+    to_status varchar(50) NOT NULL,
+
+    changed_by varchar(100) NULL,
+
+    changed_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+
+    remarks text NULL,
+
+    action_type varchar(50) NULL,
+
+    created_by varchar(255) NULL,
+
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    last_modified_by varchar(255) NULL,
+
+    last_modified_at timestamp NULL,
+
+    CONSTRAINT complaint_registration_status_history_pkey
+        PRIMARY KEY (id),
+
+    CONSTRAINT fk_complaint_registration_history
+        FOREIGN KEY (complaint_id)
+        REFERENCES awb.complaint_registration(id)
+        ON DELETE CASCADE
+);
+
+
+
+CREATE INDEX idx_complaint_registration_history_complaint
+ON awb.complaint_registration_status_history
+USING btree (complaint_id);
+
+CREATE INDEX idx_complaint_registration_history_changed_at
+ON awb.complaint_registration_status_history
+USING btree (changed_at DESC);
+
+CREATE INDEX idx_complaint_registration_history_changed_by
+ON awb.complaint_registration_status_history
+USING btree (changed_by);
+
+--------------Athul Krishna  on 15 Sep -------------------------------------------------
