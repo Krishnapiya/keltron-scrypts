@@ -872,16 +872,6 @@ VALUES
 ON CONFLICT(status_code) DO NOTHING;
 
 
-ALTER TABLE awb.complaint_registration
-RENAME COLUMN status TO status_id;
-
-ALTER TABLE awb.complaint_registration
-ALTER COLUMN status_id TYPE BIGINT
-USING NULL;
-
-ALTER TABLE awb.complaint_registration
-DROP COLUMN status_id;
-
 
 ALTER TABLE awb.complaint_registration
 ADD COLUMN status_id BIGINT;
