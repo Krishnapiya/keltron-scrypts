@@ -620,7 +620,7 @@ CREATE TABLE awb.registration_inspection (
         REFERENCES awb.registration_application(id)
 )
 INHERITS (master.audit);
-=========================================================
+
 DROP TABLE IF EXISTS master.notification CASCADE;
 
 CREATE TABLE master.notification (
@@ -660,7 +660,6 @@ ON master.notification(user_id, is_read);
 CREATE INDEX idx_notification_module_reference
 ON master.notification(module, reference_id);
 
-=================
 INSERT INTO awb.application_status_master
 (status_code, status_name, display_order)
 VALUES
