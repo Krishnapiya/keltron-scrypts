@@ -839,10 +839,6 @@ CREATE TABLE awb.complaint_registration (
 
 
 
-ALTER TABLE awb.registration_inspection
-ADD COLUMN status VARCHAR(50);
-
-
 
 ALTER TABLE awb.complaint_registration
 ADD COLUMN created_by BIGINT;
